@@ -38,11 +38,13 @@ jobs:
       - name: Resolve tag
         id: tag
         run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           if [ "${{ github.event_name }}" = "push" ]; then
             T="${GITHUB_REF#refs/tags/}"
           else
             T="${{ inputs.version }}"
           fi
+          echo "repo=${REPO_LOWER}" >> "$GITHUB_OUTPUT"
           echo "value=${T}" >> "$GITHUB_OUTPUT"
           echo "version=${T#v}" >> "$GITHUB_OUTPUT"
 
@@ -52,8 +54,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.value }}
-            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ steps.tag.outputs.repo }}:${{ steps.tag.outputs.value }}
+            ghcr.io/${{ steps.tag.outputs.repo }}:latest
           build-args: |
             VERSION=${{ steps.tag.outputs.version }}
             GOPROXY=https://proxy.golang.org,direct
