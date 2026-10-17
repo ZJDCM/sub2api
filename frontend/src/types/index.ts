@@ -655,6 +655,13 @@ export interface AdminGroup extends Group {
   // MCP XML 协议注入（仅 antigravity 平台使用）
   mcp_xml_inject: boolean
 
+  // 破甲管道（beyond limits）分组级开关
+  beyond_limits_enabled: boolean
+
+  // DeepSeek / Gemini 平台独立开关
+  beyond_limits_deepseek_enabled: boolean
+  beyond_limits_gemini_enabled: boolean
+
   // 支持的模型系列（仅 antigravity 平台使用）
   supported_model_scopes?: string[]
 

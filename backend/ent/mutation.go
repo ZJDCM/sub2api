@@ -22178,6 +22178,9 @@ type GroupMutation struct {
 	addprofit_min_margin                    *float64
 	profit_safety_buffer                    *float64
 	addprofit_safety_buffer                 *float64
+	beyond_limits_enabled                   *bool
+	beyond_limits_deepseek_enabled          *bool
+	beyond_limits_gemini_enabled            *bool
 	clearedFields                           map[string]struct{}
 	api_keys                                map[int64]struct{}
 	removedapi_keys                         map[int64]struct{}
@@ -25600,6 +25603,114 @@ func (m *GroupMutation) ResetProfitSafetyBuffer() {
 	m.addprofit_safety_buffer = nil
 }
 
+// SetBeyondLimitsEnabled sets the "beyond_limits_enabled" field.
+func (m *GroupMutation) SetBeyondLimitsEnabled(b bool) {
+	m.beyond_limits_enabled = &b
+}
+
+// BeyondLimitsEnabled returns the value of the "beyond_limits_enabled" field in the mutation.
+func (m *GroupMutation) BeyondLimitsEnabled() (r bool, exists bool) {
+	v := m.beyond_limits_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBeyondLimitsEnabled returns the old "beyond_limits_enabled" field's value of the Group entity.
+// If the Group object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupMutation) OldBeyondLimitsEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBeyondLimitsEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBeyondLimitsEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBeyondLimitsEnabled: %w", err)
+	}
+	return oldValue.BeyondLimitsEnabled, nil
+}
+
+// ResetBeyondLimitsEnabled resets all changes to the "beyond_limits_enabled" field.
+func (m *GroupMutation) ResetBeyondLimitsEnabled() {
+	m.beyond_limits_enabled = nil
+}
+
+// SetBeyondLimitsDeepseekEnabled sets the "beyond_limits_deepseek_enabled" field.
+func (m *GroupMutation) SetBeyondLimitsDeepseekEnabled(b bool) {
+	m.beyond_limits_deepseek_enabled = &b
+}
+
+// BeyondLimitsDeepseekEnabled returns the value of the "beyond_limits_deepseek_enabled" field in the mutation.
+func (m *GroupMutation) BeyondLimitsDeepseekEnabled() (r bool, exists bool) {
+	v := m.beyond_limits_deepseek_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBeyondLimitsDeepseekEnabled returns the old "beyond_limits_deepseek_enabled" field's value of the Group entity.
+// If the Group object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupMutation) OldBeyondLimitsDeepseekEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBeyondLimitsDeepseekEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBeyondLimitsDeepseekEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBeyondLimitsDeepseekEnabled: %w", err)
+	}
+	return oldValue.BeyondLimitsDeepseekEnabled, nil
+}
+
+// ResetBeyondLimitsDeepseekEnabled resets all changes to the "beyond_limits_deepseek_enabled" field.
+func (m *GroupMutation) ResetBeyondLimitsDeepseekEnabled() {
+	m.beyond_limits_deepseek_enabled = nil
+}
+
+// SetBeyondLimitsGeminiEnabled sets the "beyond_limits_gemini_enabled" field.
+func (m *GroupMutation) SetBeyondLimitsGeminiEnabled(b bool) {
+	m.beyond_limits_gemini_enabled = &b
+}
+
+// BeyondLimitsGeminiEnabled returns the value of the "beyond_limits_gemini_enabled" field in the mutation.
+func (m *GroupMutation) BeyondLimitsGeminiEnabled() (r bool, exists bool) {
+	v := m.beyond_limits_gemini_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBeyondLimitsGeminiEnabled returns the old "beyond_limits_gemini_enabled" field's value of the Group entity.
+// If the Group object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupMutation) OldBeyondLimitsGeminiEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBeyondLimitsGeminiEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBeyondLimitsGeminiEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBeyondLimitsGeminiEnabled: %w", err)
+	}
+	return oldValue.BeyondLimitsGeminiEnabled, nil
+}
+
+// ResetBeyondLimitsGeminiEnabled resets all changes to the "beyond_limits_gemini_enabled" field.
+func (m *GroupMutation) ResetBeyondLimitsGeminiEnabled() {
+	m.beyond_limits_gemini_enabled = nil
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by ids.
 func (m *GroupMutation) AddAPIKeyIDs(ids ...int64) {
 	if m.api_keys == nil {
@@ -25958,7 +26069,7 @@ func (m *GroupMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupMutation) Fields() []string {
-	fields := make([]string, 0, 67)
+	fields := make([]string, 0, 70)
 	if m.created_at != nil {
 		fields = append(fields, group.FieldCreatedAt)
 	}
@@ -26160,6 +26271,15 @@ func (m *GroupMutation) Fields() []string {
 	if m.profit_safety_buffer != nil {
 		fields = append(fields, group.FieldProfitSafetyBuffer)
 	}
+	if m.beyond_limits_enabled != nil {
+		fields = append(fields, group.FieldBeyondLimitsEnabled)
+	}
+	if m.beyond_limits_deepseek_enabled != nil {
+		fields = append(fields, group.FieldBeyondLimitsDeepseekEnabled)
+	}
+	if m.beyond_limits_gemini_enabled != nil {
+		fields = append(fields, group.FieldBeyondLimitsGeminiEnabled)
+	}
 	return fields
 }
 
@@ -26302,6 +26422,12 @@ func (m *GroupMutation) Field(name string) (ent.Value, bool) {
 		return m.ProfitMinMargin()
 	case group.FieldProfitSafetyBuffer:
 		return m.ProfitSafetyBuffer()
+	case group.FieldBeyondLimitsEnabled:
+		return m.BeyondLimitsEnabled()
+	case group.FieldBeyondLimitsDeepseekEnabled:
+		return m.BeyondLimitsDeepseekEnabled()
+	case group.FieldBeyondLimitsGeminiEnabled:
+		return m.BeyondLimitsGeminiEnabled()
 	}
 	return nil, false
 }
@@ -26445,6 +26571,12 @@ func (m *GroupMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldProfitMinMargin(ctx)
 	case group.FieldProfitSafetyBuffer:
 		return m.OldProfitSafetyBuffer(ctx)
+	case group.FieldBeyondLimitsEnabled:
+		return m.OldBeyondLimitsEnabled(ctx)
+	case group.FieldBeyondLimitsDeepseekEnabled:
+		return m.OldBeyondLimitsDeepseekEnabled(ctx)
+	case group.FieldBeyondLimitsGeminiEnabled:
+		return m.OldBeyondLimitsGeminiEnabled(ctx)
 	}
 	return nil, fmt.Errorf("unknown Group field %s", name)
 }
@@ -26922,6 +27054,27 @@ func (m *GroupMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetProfitSafetyBuffer(v)
+		return nil
+	case group.FieldBeyondLimitsEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBeyondLimitsEnabled(v)
+		return nil
+	case group.FieldBeyondLimitsDeepseekEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBeyondLimitsDeepseekEnabled(v)
+		return nil
+	case group.FieldBeyondLimitsGeminiEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBeyondLimitsGeminiEnabled(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Group field %s", name)
@@ -27634,6 +27787,15 @@ func (m *GroupMutation) ResetField(name string) error {
 		return nil
 	case group.FieldProfitSafetyBuffer:
 		m.ResetProfitSafetyBuffer()
+		return nil
+	case group.FieldBeyondLimitsEnabled:
+		m.ResetBeyondLimitsEnabled()
+		return nil
+	case group.FieldBeyondLimitsDeepseekEnabled:
+		m.ResetBeyondLimitsDeepseekEnabled()
+		return nil
+	case group.FieldBeyondLimitsGeminiEnabled:
+		m.ResetBeyondLimitsGeminiEnabled()
 		return nil
 	}
 	return fmt.Errorf("unknown Group field %s", name)

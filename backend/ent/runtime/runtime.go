@@ -1241,6 +1241,18 @@ func init() {
 	groupDescProfitSafetyBuffer := groupFields[63].Descriptor()
 	// group.DefaultProfitSafetyBuffer holds the default value on creation for the profit_safety_buffer field.
 	group.DefaultProfitSafetyBuffer = groupDescProfitSafetyBuffer.Default.(float64)
+	// groupDescBeyondLimitsEnabled is the schema descriptor for beyond_limits_enabled field.
+	groupDescBeyondLimitsEnabled := groupFields[64].Descriptor()
+	// group.DefaultBeyondLimitsEnabled holds the default value on creation for the beyond_limits_enabled field.
+	group.DefaultBeyondLimitsEnabled = groupDescBeyondLimitsEnabled.Default.(bool)
+	// groupDescBeyondLimitsDeepseekEnabled is the schema descriptor for beyond_limits_deepseek_enabled field.
+	groupDescBeyondLimitsDeepseekEnabled := groupFields[65].Descriptor()
+	// group.DefaultBeyondLimitsDeepseekEnabled holds the default value on creation for the beyond_limits_deepseek_enabled field.
+	group.DefaultBeyondLimitsDeepseekEnabled = groupDescBeyondLimitsDeepseekEnabled.Default.(bool)
+	// groupDescBeyondLimitsGeminiEnabled is the schema descriptor for beyond_limits_gemini_enabled field.
+	groupDescBeyondLimitsGeminiEnabled := groupFields[66].Descriptor()
+	// group.DefaultBeyondLimitsGeminiEnabled holds the default value on creation for the beyond_limits_gemini_enabled field.
+	group.DefaultBeyondLimitsGeminiEnabled = groupDescBeyondLimitsGeminiEnabled.Default.(bool)
 	idempotencyrecordMixin := schema.IdempotencyRecord{}.Mixin()
 	idempotencyrecordMixinFields0 := idempotencyrecordMixin[0].Fields()
 	_ = idempotencyrecordMixinFields0

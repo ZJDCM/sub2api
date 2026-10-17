@@ -214,6 +214,10 @@ export default {
     contentModeration: '内容审计',
     promptAudit: '提示词审计',
     auditLogs: '操作日志',
+    beyondLimits: '突破极限',
+    beyondLimitsOpenAI: 'Open AI',
+    beyondLimitsDeepSeek: 'Deepseek',
+    beyondLimitsGemini: 'Gemini',
   },
 
   // Auth

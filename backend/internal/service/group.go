@@ -133,6 +133,13 @@ type Group struct {
 	ProfitMinMargin      float64 // 最低毛利率，小数存储（0.30=30%）
 	ProfitSafetyBuffer   float64 // 安全缓冲，小数，与 margin 相加后从 D 中扣除
 
+	// 破甲管道（beyond limits）分组级开关：勾选后该分组下 API Key 发出的
+	// LLM 文本请求会走 bridge 注入 + 拒绝篡改管道。
+	BeyondLimitsEnabled bool
+	// DeepSeek / Gemini 平台的独立开关（按模型前缀路由到各自平台管道）。
+	BeyondLimitsDeepseekEnabled bool
+	BeyondLimitsGeminiEnabled   bool
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 

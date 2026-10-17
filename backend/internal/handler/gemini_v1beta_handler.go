@@ -370,6 +370,15 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 		modelName = channelMapping.MappedModel
 	}
 
+	// 破甲管道（beyond limits）：gemini 分组勾选后注入 systemInstruction，响应做拒绝篡改并记录监控。
+	var beyondLimits *beyondLimitsRequest
+	if apiKey.Group != nil {
+		beyondLimits = resolveBeyondLimits(apiKey.Group, reqModel, body)
+		if beyondLimits != nil {
+			defer beyondLimits.record()
+		}
+	}
+
 	// 引用显式缓存的请求只能发往持有该缓存的账号，且不参与会话粘性与换号。
 	cachedContentBinding, body, ok := h.resolveGeminiCachedContentBinding(c, reqLog, apiKey, modelName, body)
 	if !ok {
@@ -724,6 +733,14 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 			requestCtx = service.WithAccountSwitchCount(requestCtx, fs.SwitchCount, h.metadataBridgeEnabled())
 		}
 		sessionGroupID := derefGroupID(apiKey.GroupID)
+		forwardBody := body
+		if beyondLimits != nil {
+			forwardBody = service.InjectBeyondLimitsBridgeGemini(forwardBody, beyondLimits.bridge)
+		}
+		beyondLimitsPrevWriter := c.Writer
+		if beyondLimits != nil {
+			c.Writer = beyondLimits.wrapWriter(c.Writer, service.BeyondLimitsSchemaGemini, stream)
+		}
 		if account.Platform == service.PlatformAntigravity && account.Type != service.AccountTypeAPIKey {
 			result, err = h.antigravityGatewayService.ForwardGemini(
 				requestCtx,
@@ -732,12 +749,15 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 				modelName,
 				action,
 				stream,
-				body,
+				forwardBody,
 				hasBoundSession,
 				service.WithForwardGeminiSession(sessionGroupID, sessionKey),
 			)
 		} else {
-			result, err = h.geminiCompatService.ForwardNative(requestCtx, c, account, modelName, action, stream, body)
+			result, err = h.geminiCompatService.ForwardNative(requestCtx, c, account, modelName, action, stream, forwardBody)
+		}
+		if beyondLimits != nil {
+			c.Writer = beyondLimitsPrevWriter
 		}
 		if accountReleaseFunc != nil {
 			accountReleaseFunc()

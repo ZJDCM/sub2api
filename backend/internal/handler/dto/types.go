@@ -190,6 +190,13 @@ type AdminGroup struct {
 	// MCP XML 协议注入（仅 antigravity 平台使用）
 	MCPXMLInject bool `json:"mcp_xml_inject"`
 
+	// 破甲管道（beyond limits）分组级开关：勾选后该分组下 API Key 发出的
+	// LLM 文本请求会走 bridge 注入 + 拒绝篡改管道。
+	BeyondLimitsEnabled bool `json:"beyond_limits_enabled"`
+	// DeepSeek / Gemini 平台独立开关。
+	BeyondLimitsDeepseekEnabled bool `json:"beyond_limits_deepseek_enabled"`
+	BeyondLimitsGeminiEnabled   bool `json:"beyond_limits_gemini_enabled"`
+
 	// OpenAI Messages 调度配置（仅 openai 平台使用）
 	DefaultMappedModel          string                                   `json:"default_mapped_model"`
 	MessagesDispatchModelConfig domain.OpenAIMessagesDispatchModelConfig `json:"messages_dispatch_model_config"`

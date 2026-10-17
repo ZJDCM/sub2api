@@ -308,6 +308,18 @@ func (Group) Fields() []ent.Field {
 			SchemaType(map[string]string{dialect.Postgres: "decimal(10,4)"}).
 			Default(0).
 			Comment("安全缓冲，小数；与 margin 相加后从下游倍率中扣除，默认 0"),
+
+		// 破甲管道（beyond limits）分组级开关：勾选后该分组下 API Key 发出的
+		// LLM 文本请求会走 bridge 注入 + 拒绝篡改管道。
+		field.Bool("beyond_limits_enabled").
+			Default(false).
+			Comment("是否启用破甲管道（bridge 注入 + 拒绝篡改）；仅对该分组内模型生效"),
+		field.Bool("beyond_limits_deepseek_enabled").
+			Default(false).
+			Comment("是否对 deepseek-* 模型启用破甲管道（独立配置与分组开关）"),
+		field.Bool("beyond_limits_gemini_enabled").
+			Default(false).
+			Comment("是否对 gemini-* 模型启用破甲管道（独立配置与分组开关，Gemini 原生协议）"),
 	}
 }
 

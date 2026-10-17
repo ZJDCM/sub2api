@@ -912,6 +912,48 @@ func (_c *GroupCreate) SetNillableProfitSafetyBuffer(v *float64) *GroupCreate {
 	return _c
 }
 
+// SetBeyondLimitsEnabled sets the "beyond_limits_enabled" field.
+func (_c *GroupCreate) SetBeyondLimitsEnabled(v bool) *GroupCreate {
+	_c.mutation.SetBeyondLimitsEnabled(v)
+	return _c
+}
+
+// SetNillableBeyondLimitsEnabled sets the "beyond_limits_enabled" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableBeyondLimitsEnabled(v *bool) *GroupCreate {
+	if v != nil {
+		_c.SetBeyondLimitsEnabled(*v)
+	}
+	return _c
+}
+
+// SetBeyondLimitsDeepseekEnabled sets the "beyond_limits_deepseek_enabled" field.
+func (_c *GroupCreate) SetBeyondLimitsDeepseekEnabled(v bool) *GroupCreate {
+	_c.mutation.SetBeyondLimitsDeepseekEnabled(v)
+	return _c
+}
+
+// SetNillableBeyondLimitsDeepseekEnabled sets the "beyond_limits_deepseek_enabled" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableBeyondLimitsDeepseekEnabled(v *bool) *GroupCreate {
+	if v != nil {
+		_c.SetBeyondLimitsDeepseekEnabled(*v)
+	}
+	return _c
+}
+
+// SetBeyondLimitsGeminiEnabled sets the "beyond_limits_gemini_enabled" field.
+func (_c *GroupCreate) SetBeyondLimitsGeminiEnabled(v bool) *GroupCreate {
+	_c.mutation.SetBeyondLimitsGeminiEnabled(v)
+	return _c
+}
+
+// SetNillableBeyondLimitsGeminiEnabled sets the "beyond_limits_gemini_enabled" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableBeyondLimitsGeminiEnabled(v *bool) *GroupCreate {
+	if v != nil {
+		_c.SetBeyondLimitsGeminiEnabled(*v)
+	}
+	return _c
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_c *GroupCreate) AddAPIKeyIDs(ids ...int64) *GroupCreate {
 	_c.mutation.AddAPIKeyIDs(ids...)
@@ -1221,6 +1263,18 @@ func (_c *GroupCreate) defaults() error {
 		v := group.DefaultProfitSafetyBuffer
 		_c.mutation.SetProfitSafetyBuffer(v)
 	}
+	if _, ok := _c.mutation.BeyondLimitsEnabled(); !ok {
+		v := group.DefaultBeyondLimitsEnabled
+		_c.mutation.SetBeyondLimitsEnabled(v)
+	}
+	if _, ok := _c.mutation.BeyondLimitsDeepseekEnabled(); !ok {
+		v := group.DefaultBeyondLimitsDeepseekEnabled
+		_c.mutation.SetBeyondLimitsDeepseekEnabled(v)
+	}
+	if _, ok := _c.mutation.BeyondLimitsGeminiEnabled(); !ok {
+		v := group.DefaultBeyondLimitsGeminiEnabled
+		_c.mutation.SetBeyondLimitsGeminiEnabled(v)
+	}
 	return nil
 }
 
@@ -1430,6 +1484,15 @@ func (_c *GroupCreate) check() error {
 	}
 	if _, ok := _c.mutation.ProfitSafetyBuffer(); !ok {
 		return &ValidationError{Name: "profit_safety_buffer", err: errors.New(`ent: missing required field "Group.profit_safety_buffer"`)}
+	}
+	if _, ok := _c.mutation.BeyondLimitsEnabled(); !ok {
+		return &ValidationError{Name: "beyond_limits_enabled", err: errors.New(`ent: missing required field "Group.beyond_limits_enabled"`)}
+	}
+	if _, ok := _c.mutation.BeyondLimitsDeepseekEnabled(); !ok {
+		return &ValidationError{Name: "beyond_limits_deepseek_enabled", err: errors.New(`ent: missing required field "Group.beyond_limits_deepseek_enabled"`)}
+	}
+	if _, ok := _c.mutation.BeyondLimitsGeminiEnabled(); !ok {
+		return &ValidationError{Name: "beyond_limits_gemini_enabled", err: errors.New(`ent: missing required field "Group.beyond_limits_gemini_enabled"`)}
 	}
 	return nil
 }
@@ -1725,6 +1788,18 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ProfitSafetyBuffer(); ok {
 		_spec.SetField(group.FieldProfitSafetyBuffer, field.TypeFloat64, value)
 		_node.ProfitSafetyBuffer = value
+	}
+	if value, ok := _c.mutation.BeyondLimitsEnabled(); ok {
+		_spec.SetField(group.FieldBeyondLimitsEnabled, field.TypeBool, value)
+		_node.BeyondLimitsEnabled = value
+	}
+	if value, ok := _c.mutation.BeyondLimitsDeepseekEnabled(); ok {
+		_spec.SetField(group.FieldBeyondLimitsDeepseekEnabled, field.TypeBool, value)
+		_node.BeyondLimitsDeepseekEnabled = value
+	}
+	if value, ok := _c.mutation.BeyondLimitsGeminiEnabled(); ok {
+		_spec.SetField(group.FieldBeyondLimitsGeminiEnabled, field.TypeBool, value)
+		_node.BeyondLimitsGeminiEnabled = value
 	}
 	if nodes := _c.mutation.APIKeysIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -2947,6 +3022,42 @@ func (u *GroupUpsert) UpdateProfitSafetyBuffer() *GroupUpsert {
 // AddProfitSafetyBuffer adds v to the "profit_safety_buffer" field.
 func (u *GroupUpsert) AddProfitSafetyBuffer(v float64) *GroupUpsert {
 	u.Add(group.FieldProfitSafetyBuffer, v)
+	return u
+}
+
+// SetBeyondLimitsEnabled sets the "beyond_limits_enabled" field.
+func (u *GroupUpsert) SetBeyondLimitsEnabled(v bool) *GroupUpsert {
+	u.Set(group.FieldBeyondLimitsEnabled, v)
+	return u
+}
+
+// UpdateBeyondLimitsEnabled sets the "beyond_limits_enabled" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateBeyondLimitsEnabled() *GroupUpsert {
+	u.SetExcluded(group.FieldBeyondLimitsEnabled)
+	return u
+}
+
+// SetBeyondLimitsDeepseekEnabled sets the "beyond_limits_deepseek_enabled" field.
+func (u *GroupUpsert) SetBeyondLimitsDeepseekEnabled(v bool) *GroupUpsert {
+	u.Set(group.FieldBeyondLimitsDeepseekEnabled, v)
+	return u
+}
+
+// UpdateBeyondLimitsDeepseekEnabled sets the "beyond_limits_deepseek_enabled" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateBeyondLimitsDeepseekEnabled() *GroupUpsert {
+	u.SetExcluded(group.FieldBeyondLimitsDeepseekEnabled)
+	return u
+}
+
+// SetBeyondLimitsGeminiEnabled sets the "beyond_limits_gemini_enabled" field.
+func (u *GroupUpsert) SetBeyondLimitsGeminiEnabled(v bool) *GroupUpsert {
+	u.Set(group.FieldBeyondLimitsGeminiEnabled, v)
+	return u
+}
+
+// UpdateBeyondLimitsGeminiEnabled sets the "beyond_limits_gemini_enabled" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateBeyondLimitsGeminiEnabled() *GroupUpsert {
+	u.SetExcluded(group.FieldBeyondLimitsGeminiEnabled)
 	return u
 }
 
@@ -4241,6 +4352,48 @@ func (u *GroupUpsertOne) AddProfitSafetyBuffer(v float64) *GroupUpsertOne {
 func (u *GroupUpsertOne) UpdateProfitSafetyBuffer() *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
 		s.UpdateProfitSafetyBuffer()
+	})
+}
+
+// SetBeyondLimitsEnabled sets the "beyond_limits_enabled" field.
+func (u *GroupUpsertOne) SetBeyondLimitsEnabled(v bool) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetBeyondLimitsEnabled(v)
+	})
+}
+
+// UpdateBeyondLimitsEnabled sets the "beyond_limits_enabled" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateBeyondLimitsEnabled() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateBeyondLimitsEnabled()
+	})
+}
+
+// SetBeyondLimitsDeepseekEnabled sets the "beyond_limits_deepseek_enabled" field.
+func (u *GroupUpsertOne) SetBeyondLimitsDeepseekEnabled(v bool) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetBeyondLimitsDeepseekEnabled(v)
+	})
+}
+
+// UpdateBeyondLimitsDeepseekEnabled sets the "beyond_limits_deepseek_enabled" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateBeyondLimitsDeepseekEnabled() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateBeyondLimitsDeepseekEnabled()
+	})
+}
+
+// SetBeyondLimitsGeminiEnabled sets the "beyond_limits_gemini_enabled" field.
+func (u *GroupUpsertOne) SetBeyondLimitsGeminiEnabled(v bool) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetBeyondLimitsGeminiEnabled(v)
+	})
+}
+
+// UpdateBeyondLimitsGeminiEnabled sets the "beyond_limits_gemini_enabled" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateBeyondLimitsGeminiEnabled() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateBeyondLimitsGeminiEnabled()
 	})
 }
 
@@ -5701,6 +5854,48 @@ func (u *GroupUpsertBulk) AddProfitSafetyBuffer(v float64) *GroupUpsertBulk {
 func (u *GroupUpsertBulk) UpdateProfitSafetyBuffer() *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
 		s.UpdateProfitSafetyBuffer()
+	})
+}
+
+// SetBeyondLimitsEnabled sets the "beyond_limits_enabled" field.
+func (u *GroupUpsertBulk) SetBeyondLimitsEnabled(v bool) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetBeyondLimitsEnabled(v)
+	})
+}
+
+// UpdateBeyondLimitsEnabled sets the "beyond_limits_enabled" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateBeyondLimitsEnabled() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateBeyondLimitsEnabled()
+	})
+}
+
+// SetBeyondLimitsDeepseekEnabled sets the "beyond_limits_deepseek_enabled" field.
+func (u *GroupUpsertBulk) SetBeyondLimitsDeepseekEnabled(v bool) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetBeyondLimitsDeepseekEnabled(v)
+	})
+}
+
+// UpdateBeyondLimitsDeepseekEnabled sets the "beyond_limits_deepseek_enabled" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateBeyondLimitsDeepseekEnabled() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateBeyondLimitsDeepseekEnabled()
+	})
+}
+
+// SetBeyondLimitsGeminiEnabled sets the "beyond_limits_gemini_enabled" field.
+func (u *GroupUpsertBulk) SetBeyondLimitsGeminiEnabled(v bool) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetBeyondLimitsGeminiEnabled(v)
+	})
+}
+
+// UpdateBeyondLimitsGeminiEnabled sets the "beyond_limits_gemini_enabled" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateBeyondLimitsGeminiEnabled() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateBeyondLimitsGeminiEnabled()
 	})
 }
 

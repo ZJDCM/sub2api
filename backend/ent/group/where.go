@@ -345,6 +345,21 @@ func ProfitSafetyBuffer(v float64) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldProfitSafetyBuffer, v))
 }
 
+// BeyondLimitsEnabled applies equality check predicate on the "beyond_limits_enabled" field. It's identical to BeyondLimitsEnabledEQ.
+func BeyondLimitsEnabled(v bool) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldBeyondLimitsEnabled, v))
+}
+
+// BeyondLimitsDeepseekEnabled applies equality check predicate on the "beyond_limits_deepseek_enabled" field. It's identical to BeyondLimitsDeepseekEnabledEQ.
+func BeyondLimitsDeepseekEnabled(v bool) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldBeyondLimitsDeepseekEnabled, v))
+}
+
+// BeyondLimitsGeminiEnabled applies equality check predicate on the "beyond_limits_gemini_enabled" field. It's identical to BeyondLimitsGeminiEnabledEQ.
+func BeyondLimitsGeminiEnabled(v bool) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldBeyondLimitsGeminiEnabled, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldCreatedAt, v))
@@ -2648,6 +2663,36 @@ func ProfitSafetyBufferLT(v float64) predicate.Group {
 // ProfitSafetyBufferLTE applies the LTE predicate on the "profit_safety_buffer" field.
 func ProfitSafetyBufferLTE(v float64) predicate.Group {
 	return predicate.Group(sql.FieldLTE(FieldProfitSafetyBuffer, v))
+}
+
+// BeyondLimitsEnabledEQ applies the EQ predicate on the "beyond_limits_enabled" field.
+func BeyondLimitsEnabledEQ(v bool) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldBeyondLimitsEnabled, v))
+}
+
+// BeyondLimitsEnabledNEQ applies the NEQ predicate on the "beyond_limits_enabled" field.
+func BeyondLimitsEnabledNEQ(v bool) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldBeyondLimitsEnabled, v))
+}
+
+// BeyondLimitsDeepseekEnabledEQ applies the EQ predicate on the "beyond_limits_deepseek_enabled" field.
+func BeyondLimitsDeepseekEnabledEQ(v bool) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldBeyondLimitsDeepseekEnabled, v))
+}
+
+// BeyondLimitsDeepseekEnabledNEQ applies the NEQ predicate on the "beyond_limits_deepseek_enabled" field.
+func BeyondLimitsDeepseekEnabledNEQ(v bool) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldBeyondLimitsDeepseekEnabled, v))
+}
+
+// BeyondLimitsGeminiEnabledEQ applies the EQ predicate on the "beyond_limits_gemini_enabled" field.
+func BeyondLimitsGeminiEnabledEQ(v bool) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldBeyondLimitsGeminiEnabled, v))
+}
+
+// BeyondLimitsGeminiEnabledNEQ applies the NEQ predicate on the "beyond_limits_gemini_enabled" field.
+func BeyondLimitsGeminiEnabledNEQ(v bool) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldBeyondLimitsGeminiEnabled, v))
 }
 
 // HasAPIKeys applies the HasEdge predicate on the "api_keys" edge.

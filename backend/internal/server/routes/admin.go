@@ -122,6 +122,9 @@ func RegisterAdminRoutes(
 		// 风控中心
 		registerContentModerationRoutes(admin, h)
 
+		// 破甲管道（beyond limits）
+		registerBeyondLimitsRoutes(admin, h)
+
 		// 独立提示词输入审计
 		registerPromptAuditRoutes(admin, h)
 
@@ -178,6 +181,17 @@ func registerContentModerationRoutes(admin *gin.RouterGroup, h *handler.Handlers
 		risk.POST("/users/:user_id/unban", h.Admin.ContentModeration.UnbanUser)
 		risk.DELETE("/hashes", h.Admin.ContentModeration.DeleteFlaggedHash)
 		risk.DELETE("/hashes/all", h.Admin.ContentModeration.ClearFlaggedHashes)
+	}
+}
+
+func registerBeyondLimitsRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	bl := admin.Group("/beyond-limits")
+	{
+		bl.GET("/:platform/config", h.Admin.BeyondLimits.GetConfig)
+		bl.PUT("/:platform/config", h.Admin.BeyondLimits.UpdateConfig)
+		bl.PUT("/:platform/groups/:id/toggle", h.Admin.BeyondLimits.ToggleGroup)
+		bl.GET("/:platform/stats", h.Admin.BeyondLimits.Stats)
+		bl.GET("/:platform/log", h.Admin.BeyondLimits.Log)
 	}
 }
 

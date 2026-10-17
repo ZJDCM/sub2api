@@ -439,6 +439,54 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/admin/beyond-limits',
+    name: 'AdminBeyondLimits',
+    component: () => import('@/views/admin/BeyondLimitsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Beyond Limits',
+      titleKey: 'admin.beyondLimits.title',
+      descriptionKey: 'admin.beyondLimits.description'
+    }
+  },
+  {
+    path: '/admin/beyond-limits/openai',
+    name: 'AdminBeyondLimitsOpenAI',
+    component: () => import('@/views/admin/BeyondLimitsOpenAIView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'OpenAI',
+      titleKey: 'admin.beyondLimits.openai.title',
+      descriptionKey: 'admin.beyondLimits.openai.description'
+    }
+  },
+  {
+    path: '/admin/beyond-limits/deepseek',
+    name: 'AdminBeyondLimitsDeepSeek',
+    component: () => import('@/views/admin/BeyondLimitsDeepSeekView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'DeepSeek',
+      titleKey: 'admin.beyondLimits.deepseek.title',
+      descriptionKey: 'admin.beyondLimits.deepseek.description'
+    }
+  },
+  {
+    path: '/admin/beyond-limits/gemini',
+    name: 'AdminBeyondLimitsGemini',
+    component: () => import('@/views/admin/BeyondLimitsGeminiView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Gemini',
+      titleKey: 'admin.beyondLimits.gemini.title',
+      descriptionKey: 'admin.beyondLimits.gemini.description'
+    }
+  },
+  {
     path: '/admin/users',
     name: 'AdminUsers',
     component: () => import('@/views/admin/UsersView.vue'),

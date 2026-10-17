@@ -1042,6 +1042,9 @@ func groupEntityToService(g *dbent.Group) *service.Group {
 		ProfitControlEnabled:            g.ProfitControlEnabled,
 		ProfitMinMargin:                 g.ProfitMinMargin,
 		ProfitSafetyBuffer:              g.ProfitSafetyBuffer,
+		BeyondLimitsEnabled:             g.BeyondLimitsEnabled,
+		BeyondLimitsDeepseekEnabled:     g.BeyondLimitsDeepseekEnabled,
+		BeyondLimitsGeminiEnabled:       g.BeyondLimitsGeminiEnabled,
 		CreatedAt:                       g.CreatedAt,
 		UpdatedAt:                       g.UpdatedAt,
 	}

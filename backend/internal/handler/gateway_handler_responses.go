@@ -108,6 +108,15 @@ func (h *GatewayHandler) Responses(c *gin.Context) {
 	// 解析渠道级模型映射
 	channelMapping, _ := h.gatewayService.ResolveChannelMappingAndRestrict(requestCtx, apiKey.GroupID, reqModel)
 
+	// 破甲管道（beyond limits）：分组勾选后，注入 bridge 到 system，响应做拒绝篡改并记录监控。
+	var beyondLimits *beyondLimitsRequest
+	if apiKey.Group != nil {
+		beyondLimits = resolveBeyondLimits(apiKey.Group, reqModel, body)
+		if beyondLimits != nil {
+			defer beyondLimits.record()
+		}
+	}
+
 	// Claude Code only restriction: /v1/responses is never a Claude Code
 	// endpoint. With a fallback group the request continues and account selection
 	// (checkClaudeCodeRestriction) schedules it in the fallback group; without one
@@ -279,8 +288,15 @@ func (h *GatewayHandler) Responses(c *gin.Context) {
 		if channelMapping.Mapped {
 			forwardBody = h.gatewayService.ReplaceModelInBody(body, channelMapping.MappedModel)
 		}
+		if beyondLimits != nil {
+			forwardBody = service.InjectBeyondLimitsBridge(forwardBody, beyondLimits.bridge)
+		}
 		var result *service.ForwardResult
 		setActualUpstreamEndpoint(c, "")
+		beyondLimitsPrevWriter := c.Writer
+		if beyondLimits != nil {
+			c.Writer = beyondLimits.wrapWriter(c.Writer, service.BeyondLimitsSchemaResponses, reqStream)
+		}
 		if shouldUseAntigravityCompat(account) {
 			if h.antigravityGatewayService == nil {
 				h.responsesErrorResponse(c, http.StatusBadGateway, "upstream_error", "Antigravity compatibility service is not configured")
@@ -293,6 +309,9 @@ func (h *GatewayHandler) Responses(c *gin.Context) {
 			result, err = h.antigravityGatewayService.ForwardAsResponses(requestCtx, c, account, forwardBody, parsedReq)
 		} else {
 			result, err = h.gatewayService.ForwardAsResponses(requestCtx, c, account, forwardBody, parsedReq)
+		}
+		if beyondLimits != nil {
+			c.Writer = beyondLimitsPrevWriter
 		}
 
 		if accountReleaseFunc != nil {

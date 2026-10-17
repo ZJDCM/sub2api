@@ -193,6 +193,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAdminSettingsStore, useAppStore, useAuthStore, useOnboardingStore } from '@/stores'
 import VersionBadge from '@/components/common/VersionBadge.vue'
+import PlatformIcon from '@/components/common/PlatformIcon.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { sanitizeSvg } from '@/utils/sanitize'
 import { sanitizeUrl } from '@/utils/url'
@@ -479,6 +480,22 @@ const ServerIcon = {
 
 const PluginIcon = {
   render: () => h(Icon, { name: 'cube' })
+}
+
+const BoltIcon = {
+  render: () => h(Icon, { name: 'bolt' })
+}
+
+const OpenAIIcon = {
+  render: () => h(PlatformIcon, { platform: 'openai', size: 'md' })
+}
+
+const DeepSeekIcon = {
+  render: () => h(PlatformIcon, { platform: 'deepseek', size: 'md' })
+}
+
+const GeminiIcon = {
+  render: () => h(PlatformIcon, { platform: 'gemini', size: 'md' })
 }
 
 const BellIcon = {
@@ -836,7 +853,18 @@ const adminNavItems = computed((): NavItem[] => {
       ],
     },
     { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },
-    { path: '/admin/audit-logs', label: t('nav.auditLogs'), icon: ShieldIcon, hideInSimpleMode: true }
+    { path: '/admin/audit-logs', label: t('nav.auditLogs'), icon: ShieldIcon, hideInSimpleMode: true },
+    {
+      path: '/admin/beyond-limits',
+      label: t('nav.beyondLimits'),
+      icon: BoltIcon,
+      expandOnly: true,
+      children: [
+        { path: '/admin/beyond-limits/openai', label: t('nav.beyondLimitsOpenAI'), icon: OpenAIIcon },
+        { path: '/admin/beyond-limits/deepseek', label: t('nav.beyondLimitsDeepSeek'), icon: DeepSeekIcon },
+        { path: '/admin/beyond-limits/gemini', label: t('nav.beyondLimitsGemini'), icon: GeminiIcon },
+      ],
+    }
   ]
 
   const visible = applyFeatureFlags(baseItems)

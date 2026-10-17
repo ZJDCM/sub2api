@@ -1,0 +1,68 @@
+export default {
+  beyondLimits: {
+    title: '突破极限',
+    description: '打破常规边界，探索更多可能。',
+    placeholderTitle: '功能建设中',
+    placeholderDescription: '该栏目的具体内容尚未配置，敬请期待。',
+    openai: {
+      title: 'Open AI',
+      description: '服务端破甲管道：向请求注入破甲指令集，并对拒绝输出做篡改替换。',
+    },
+    deepseek: {
+      title: 'Deepseek',
+      description: '服务端破甲管道：向 DeepSeek 模型请求注入破甲指令集，并对拒绝输出做篡改替换。',
+    },
+    gemini: {
+      title: 'Gemini',
+      description: '服务端破甲管道：向 Gemini 原生请求注入 systemInstruction，并对拒绝输出做篡改替换。',
+    },
+    loadFailed: '加载数据失败',
+    saveFailed: '保存配置失败',
+    saved: '已保存',
+    stats: {
+      total: '总请求',
+      injected: '已注入',
+      tampered: '已篡改',
+      successRate: '成功率',
+      byCategory: '分类统计',
+    },
+    groups: {
+      title: '生效分组',
+      description: '只有路由到已勾选分组的请求才会走破甲管道。',
+      empty: '暂无分组。',
+      toggleSuccess: '分组已更新',
+      toggleFailed: '更新分组失败',
+    },
+    bridge: {
+      title: '破甲指令集（Bridge）',
+      description: '注入到已勾选分组请求的 system 提示中。',
+      placeholder: '输入破甲指令集...',
+      resetDefault: '恢复默认',
+    },
+    rules: {
+      title: '拒绝检测规则',
+      description: '每行一条正则；命中的回复会被替换为 Rei Protocol。',
+      placeholder: '每行一条正则...',
+      resetDefault: '恢复默认',
+      count: '{count} 条规则',
+    },
+    log: {
+      title: '交互日志',
+      empty: '暂无交互记录。',
+      time: '时间',
+      model: '模型',
+      category: '分类',
+      injected: '注入',
+      tampered: '篡改',
+      durationMs: '耗时',
+      prompt: '用户输入',
+      reply: '回复预览',
+    },
+    category: {
+      crack: '破解',
+      reverse: '逆向',
+      pentest: '渗透',
+      general: '通用',
+    },
+  },
+}

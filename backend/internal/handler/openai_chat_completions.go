@@ -118,6 +118,15 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 	channelMapping, _ := h.gatewayService.ResolveChannelMappingAndRestrict(c.Request.Context(), apiKey.GroupID, reqModel)
 	forwardModel := openAIChannelForwardModel(channelMapping, reqModel)
 
+	// 破甲管道（beyond limits）：分组勾选后，注入 bridge 到 system，响应做拒绝篡改并记录监控。
+	var beyondLimits *beyondLimitsRequest
+	if apiKey.Group != nil {
+		beyondLimits = resolveBeyondLimits(apiKey.Group, reqModel, body)
+		if beyondLimits != nil {
+			defer beyondLimits.record()
+		}
+	}
+
 	if h.errorPassthroughService != nil {
 		service.BindErrorPassthroughService(c, h.errorPassthroughService)
 	}
@@ -253,7 +262,14 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 		if channelMapping.Mapped {
 			forwardBody = h.gatewayService.ReplaceModelInBody(body, channelMapping.MappedModel)
 		}
+		if beyondLimits != nil {
+			forwardBody = service.InjectBeyondLimitsBridge(forwardBody, beyondLimits.bridge)
+		}
 		writerSizeBeforeForward := c.Writer.Size()
+		beyondLimitsPrevWriter := c.Writer
+		if beyondLimits != nil {
+			c.Writer = beyondLimits.wrapWriter(c.Writer, service.BeyondLimitsSchemaChat, reqStream)
+		}
 		result, err := func() (*service.OpenAIForwardResult, error) {
 			defer func() {
 				if accountReleaseFunc != nil {
@@ -262,6 +278,9 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 			}()
 			return h.gatewayService.ForwardAsChatCompletions(c.Request.Context(), c, account, forwardBody, promptCacheKey, "")
 		}()
+		if beyondLimits != nil {
+			c.Writer = beyondLimitsPrevWriter
+		}
 		var cyberBlockBodyChat []byte
 		if service.GetOpsCyberPolicy(c) != nil {
 			cyberBlockBodyChat = body

@@ -1,0 +1,68 @@
+export default {
+  beyondLimits: {
+    title: 'Beyond Limits',
+    description: 'Break through the boundaries and explore more possibilities.',
+    placeholderTitle: 'Coming Soon',
+    placeholderDescription: 'The content of this section has not been configured yet. Stay tuned.',
+    openai: {
+      title: 'Open AI',
+      description: 'Server-side anti-refusal pipeline: inject bridge instructions into requests and rewrite refusal responses.',
+    },
+    deepseek: {
+      title: 'Deepseek',
+      description: 'Server-side anti-refusal pipeline: inject bridge instructions into DeepSeek requests and rewrite refusal responses.',
+    },
+    gemini: {
+      title: 'Gemini',
+      description: 'Server-side anti-refusal pipeline: inject systemInstruction into Gemini native requests and rewrite refusal responses.',
+    },
+    loadFailed: 'Failed to load data',
+    saveFailed: 'Failed to save configuration',
+    saved: 'Saved',
+    stats: {
+      total: 'Total',
+      injected: 'Injected',
+      tampered: 'Tampered',
+      successRate: 'Success rate',
+      byCategory: 'By category',
+    },
+    groups: {
+      title: 'Enabled Groups',
+      description: 'Only requests routed through checked groups go through the pipeline.',
+      empty: 'No groups available.',
+      toggleSuccess: 'Group updated',
+      toggleFailed: 'Failed to update group',
+    },
+    bridge: {
+      title: 'Bridge Instructions',
+      description: 'Injected into the system prompt of requests in enabled groups.',
+      placeholder: 'Enter bridge instructions...',
+      resetDefault: 'Reset to default',
+    },
+    rules: {
+      title: 'Refusal Detection Rules',
+      description: 'One regex per line; matched replies are replaced by the Rei Protocol.',
+      placeholder: 'One regex per line...',
+      resetDefault: 'Reset to default',
+      count: '{count} rules',
+    },
+    log: {
+      title: 'Interaction Log',
+      empty: 'No interactions recorded yet.',
+      time: 'Time',
+      model: 'Model',
+      category: 'Category',
+      injected: 'Injected',
+      tampered: 'Tampered',
+      durationMs: 'Duration',
+      prompt: 'User prompt',
+      reply: 'Reply preview',
+    },
+    category: {
+      crack: 'Crack',
+      reverse: 'Reverse',
+      pentest: 'Pentest',
+      general: 'General',
+    },
+  },
+}

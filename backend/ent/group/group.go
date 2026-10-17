@@ -150,6 +150,12 @@ const (
 	FieldProfitMinMargin = "profit_min_margin"
 	// FieldProfitSafetyBuffer holds the string denoting the profit_safety_buffer field in the database.
 	FieldProfitSafetyBuffer = "profit_safety_buffer"
+	// FieldBeyondLimitsEnabled holds the string denoting the beyond_limits_enabled field in the database.
+	FieldBeyondLimitsEnabled = "beyond_limits_enabled"
+	// FieldBeyondLimitsDeepseekEnabled holds the string denoting the beyond_limits_deepseek_enabled field in the database.
+	FieldBeyondLimitsDeepseekEnabled = "beyond_limits_deepseek_enabled"
+	// FieldBeyondLimitsGeminiEnabled holds the string denoting the beyond_limits_gemini_enabled field in the database.
+	FieldBeyondLimitsGeminiEnabled = "beyond_limits_gemini_enabled"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
 	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
@@ -292,6 +298,9 @@ var Columns = []string{
 	FieldProfitControlEnabled,
 	FieldProfitMinMargin,
 	FieldProfitSafetyBuffer,
+	FieldBeyondLimitsEnabled,
+	FieldBeyondLimitsDeepseekEnabled,
+	FieldBeyondLimitsGeminiEnabled,
 }
 
 var (
@@ -439,6 +448,12 @@ var (
 	DefaultProfitMinMargin float64
 	// DefaultProfitSafetyBuffer holds the default value on creation for the "profit_safety_buffer" field.
 	DefaultProfitSafetyBuffer float64
+	// DefaultBeyondLimitsEnabled holds the default value on creation for the "beyond_limits_enabled" field.
+	DefaultBeyondLimitsEnabled bool
+	// DefaultBeyondLimitsDeepseekEnabled holds the default value on creation for the "beyond_limits_deepseek_enabled" field.
+	DefaultBeyondLimitsDeepseekEnabled bool
+	// DefaultBeyondLimitsGeminiEnabled holds the default value on creation for the "beyond_limits_gemini_enabled" field.
+	DefaultBeyondLimitsGeminiEnabled bool
 )
 
 // OrderOption defines the ordering options for the Group queries.
@@ -737,6 +752,21 @@ func ByProfitMinMargin(opts ...sql.OrderTermOption) OrderOption {
 // ByProfitSafetyBuffer orders the results by the profit_safety_buffer field.
 func ByProfitSafetyBuffer(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProfitSafetyBuffer, opts...).ToFunc()
+}
+
+// ByBeyondLimitsEnabled orders the results by the beyond_limits_enabled field.
+func ByBeyondLimitsEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBeyondLimitsEnabled, opts...).ToFunc()
+}
+
+// ByBeyondLimitsDeepseekEnabled orders the results by the beyond_limits_deepseek_enabled field.
+func ByBeyondLimitsDeepseekEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBeyondLimitsDeepseekEnabled, opts...).ToFunc()
+}
+
+// ByBeyondLimitsGeminiEnabled orders the results by the beyond_limits_gemini_enabled field.
+func ByBeyondLimitsGeminiEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBeyondLimitsGeminiEnabled, opts...).ToFunc()
 }
 
 // ByAPIKeysCount orders the results by api_keys count.
