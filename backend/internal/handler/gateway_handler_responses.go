@@ -114,6 +114,12 @@ func (h *GatewayHandler) Responses(c *gin.Context) {
 		beyondLimits = resolveBeyondLimits(apiKey.Group, reqModel, body)
 		if beyondLimits != nil {
 			defer beyondLimits.record()
+			// Antigravity 分组：bridge 交给转发层注入最终 Gemini 请求的 user 消息，
+			// 这里清掉请求自带的 system 指令，避免与身份补丁/桥接抢占优先级。
+			if apiKey.Group.Platform == service.PlatformAntigravity {
+				c.Request = c.Request.WithContext(service.WithBeyondLimitsBridge(c.Request.Context(), beyondLimits.bridge))
+				body = service.StripRequestSystemPrompts(body)
+			}
 		}
 	}
 
@@ -288,7 +294,7 @@ func (h *GatewayHandler) Responses(c *gin.Context) {
 		if channelMapping.Mapped {
 			forwardBody = h.gatewayService.ReplaceModelInBody(body, channelMapping.MappedModel)
 		}
-		if beyondLimits != nil {
+		if beyondLimits != nil && (apiKey.Group == nil || apiKey.Group.Platform != service.PlatformAntigravity) {
 			if beyondLimits.platform == service.BeyondLimitsPlatformDeepSeek {
 				forwardBody = service.InjectBeyondLimitsBridgeUser(forwardBody, beyondLimits.bridge)
 			} else {

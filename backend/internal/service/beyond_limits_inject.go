@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"strings"
 )
@@ -374,4 +375,201 @@ func CategorizeBeyondLimits(userMsg string) BeyondLimitsCategory {
 		}
 	}
 	return BeyondLimitsCategoryGeneral
+}
+
+// beyondLimitsBridgeCtxKey 是请求级 bridge 在 context 中的键。
+type beyondLimitsBridgeCtxKey struct{}
+
+// WithBeyondLimitsBridge 把当前请求的 bridge 放入 context，供 Antigravity 转发链在
+// 最终 Gemini 请求体上把 bridge 注入 user 消息并关闭安全过滤。
+func WithBeyondLimitsBridge(ctx context.Context, bridge string) context.Context {
+	if ctx == nil || strings.TrimSpace(bridge) == "" {
+		return ctx
+	}
+	return context.WithValue(ctx, beyondLimitsBridgeCtxKey{}, bridge)
+}
+
+// BeyondLimitsBridgeFromContext 读取当前请求的 bridge；未设置返回空串。
+func BeyondLimitsBridgeFromContext(ctx context.Context) string {
+	if ctx == nil {
+		return ""
+	}
+	v, _ := ctx.Value(beyondLimitsBridgeCtxKey{}).(string)
+	return v
+}
+
+// geminiSafetyOff 关闭 Antigravity 上游的五类安全过滤。
+var geminiSafetyOff = []map[string]any{
+	{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "OFF"},
+	{"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "OFF"},
+	{"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "OFF"},
+	{"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "OFF"},
+	{"category": "HARM_CATEGORY_CIVIC_INTEGRITY", "threshold": "OFF"},
+}
+
+// InjectBeyondLimitsBridgeIntoGeminiUser 把 bridge 前置到 Gemini 请求最后一轮 user
+// 消息里，并把 safetySettings 设为全 OFF。Gemini 对 user 通道的服从率显著高于
+// systemInstruction（实测 9/12 对 2/16），user 内容也不会被身份补丁边界稀释。
+// 兼容裸 Gemini 体与 v1internal 包装体（request 子对象）。
+func InjectBeyondLimitsBridgeIntoGeminiUser(body []byte, bridge string) []byte {
+	if strings.TrimSpace(bridge) == "" {
+		return body
+	}
+	dec := json.NewDecoder(bytes.NewReader(body))
+	dec.UseNumber()
+	var v any
+	if err := dec.Decode(&v); err != nil {
+		return body
+	}
+	root, ok := v.(map[string]any)
+	if !ok {
+		return body
+	}
+	target := root
+	if inner, ok := root["request"].(map[string]any); ok {
+		target = inner
+	}
+
+	fingerprint := bridge
+	if len(fingerprint) > 96 {
+		fingerprint = fingerprint[:96]
+	}
+
+	if !geminiBodyContainsText(target, fingerprint) {
+		contents, _ := target["contents"].([]any)
+		lastUser := -1
+		for i, raw := range contents {
+			cm, ok := raw.(map[string]any)
+			if !ok {
+				continue
+			}
+			role, _ := cm["role"].(string)
+			role = strings.ToLower(strings.TrimSpace(role))
+			if role == "" || role == "user" {
+				lastUser = i
+			}
+		}
+		if lastUser >= 0 {
+			cm := contents[lastUser].(map[string]any)
+			parts, _ := cm["parts"].([]any)
+			parts = append([]any{map[string]any{"text": bridge + "\n\n---\n\nUSER REQUEST:\n"}}, parts...)
+			cm["parts"] = parts
+		} else {
+			target["contents"] = append(contents, map[string]any{
+				"role":  "user",
+				"parts": []any{map[string]any{"text": bridge}},
+			})
+		}
+	}
+
+	target["safetySettings"] = geminiSafetyOff
+	out, err := json.Marshal(v)
+	if err != nil {
+		return body
+	}
+	return out
+}
+
+// geminiBodyContainsText 报告 Gemini 请求体（contents + systemInstruction）是否已含指定文本。
+func geminiBodyContainsText(target map[string]any, needle string) bool {
+	if needle == "" {
+		return false
+	}
+	check := func(parts []any) bool {
+		for _, raw := range parts {
+			pm, ok := raw.(map[string]any)
+			if !ok {
+				continue
+			}
+			if text, ok := pm["text"].(string); ok && strings.Contains(text, needle) {
+				return true
+			}
+		}
+		return false
+	}
+	if contents, ok := target["contents"].([]any); ok {
+		for _, raw := range contents {
+			cm, ok := raw.(map[string]any)
+			if !ok {
+				continue
+			}
+			parts, _ := cm["parts"].([]any)
+			if check(parts) {
+				return true
+			}
+		}
+	}
+	if sys, ok := target["systemInstruction"].(map[string]any); ok {
+		parts, _ := sys["parts"].([]any)
+		if check(parts) {
+			return true
+		}
+	}
+	return false
+}
+
+// StripRequestSystemPrompts 丢弃请求自带的 system / developer 指令载体，只保留业务
+// 消息。用于 Antigravity 分组：bridge 统一由转发层注入 user 消息，上游
+// systemInstruction 只保留 Antigravity 身份补丁。
+func StripRequestSystemPrompts(body []byte) []byte {
+	dec := json.NewDecoder(bytes.NewReader(body))
+	dec.UseNumber()
+	var v any
+	if err := dec.Decode(&v); err != nil {
+		return body
+	}
+	root, ok := v.(map[string]any)
+	if !ok {
+		return body
+	}
+	for _, key := range []string{"instructions", "system_prompt", "personality", "system"} {
+		delete(root, key)
+	}
+	for _, key := range []string{"messages", "input"} {
+		items, ok := root[key].([]any)
+		if !ok {
+			continue
+		}
+		filtered := make([]any, 0, len(items))
+		for _, raw := range items {
+			im, ok := raw.(map[string]any)
+			if !ok {
+				filtered = append(filtered, raw)
+				continue
+			}
+			role, _ := im["role"].(string)
+			role = strings.ToLower(strings.TrimSpace(role))
+			if role == "system" || role == "developer" {
+				continue
+			}
+			filtered = append(filtered, raw)
+		}
+		root[key] = filtered
+	}
+	out, err := json.Marshal(v)
+	if err != nil {
+		return body
+	}
+	return out
+}
+
+// StripGeminiSystemInstruction 丢弃 Gemini 原生请求体自带的 systemInstruction。
+func StripGeminiSystemInstruction(body []byte) []byte {
+	dec := json.NewDecoder(bytes.NewReader(body))
+	dec.UseNumber()
+	var v any
+	if err := dec.Decode(&v); err != nil {
+		return body
+	}
+	root, ok := v.(map[string]any)
+	if !ok {
+		return body
+	}
+	delete(root, "systemInstruction")
+	delete(root, "system_instruction")
+	out, err := json.Marshal(v)
+	if err != nil {
+		return body
+	}
+	return out
 }

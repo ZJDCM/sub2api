@@ -97,6 +97,10 @@ func (s *AntigravityGatewayService) Forward(ctx context.Context, c *gin.Context,
 	if err != nil {
 		return nil, s.writeClaudeError(c, http.StatusBadRequest, "invalid_request_error", "Invalid request")
 	}
+	// 破甲桥接提示词注入：放在 user 消息里（Gemini 对 user 通道服从率远高于 system）。
+	if bridge := BeyondLimitsBridgeFromContext(ctx); bridge != "" {
+		geminiBody = InjectBeyondLimitsBridgeIntoGeminiUser(geminiBody, bridge)
+	}
 
 	// Antigravity 上游只支持流式请求，统一使用 streamGenerateContent
 	// 如果客户端请求非流式，在响应处理阶段会收集完整流式响应后转换返回

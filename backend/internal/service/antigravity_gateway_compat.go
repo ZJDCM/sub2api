@@ -246,6 +246,10 @@ func (s *AntigravityGatewayService) prepareAntigravityCompatCall(
 	if err != nil {
 		return nil, s.writeAntigravityCompatError(c, http.StatusBadRequest, "invalid_request_error", "Invalid request")
 	}
+	// 破甲桥接提示词注入：放在 user 消息里（Gemini 对 user 通道服从率远高于 system）。
+	if bridge := BeyondLimitsBridgeFromContext(ctx); bridge != "" {
+		geminiBody = InjectBeyondLimitsBridgeIntoGeminiUser(geminiBody, bridge)
+	}
 
 	request.reasoningEffort = ApplyThinkingEnabledFallback(request.reasoningEffort, request.originalBody, mappedModel)
 	return &antigravityCompatUpstreamCall{

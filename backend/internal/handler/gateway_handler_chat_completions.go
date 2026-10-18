@@ -119,14 +119,14 @@ func (h *GatewayHandler) ChatCompletions(c *gin.Context) {
 		return
 	}
 
-	// 破甲管道：Antigravity 分组按 Gemini 配置注入 bridge。这条入口把 chat 请求
-	// 转成 Anthropic → Gemini 后发给 Antigravity，桥接提示词以 OpenAI 形态的
-	// system 消息写入，转换链会把它带到上游 systemInstruction。
-	var beyondLimits *beyondLimitsRequest
+	// 破甲管道：Antigravity 分组按 Gemini 配置注入 bridge。bridge 不走 system，
+	// 而是交给 antigravity 转发层注入最终 Gemini 请求的 user 消息（服从率更高），
+	// 同时清掉请求自带的 system/developer 指令，只保留上游身份补丁。
 	if apiKey.Group != nil && apiKey.Group.Platform == service.PlatformAntigravity {
-		beyondLimits = resolveBeyondLimits(apiKey.Group, reqModel, body)
-		if beyondLimits != nil {
+		if beyondLimits := resolveBeyondLimits(apiKey.Group, reqModel, body); beyondLimits != nil {
 			defer beyondLimits.record()
+			c.Request = c.Request.WithContext(service.WithBeyondLimitsBridge(c.Request.Context(), beyondLimits.bridge))
+			body = service.StripRequestSystemPrompts(body)
 		}
 	}
 
@@ -298,15 +298,6 @@ func (h *GatewayHandler) ChatCompletions(c *gin.Context) {
 		forwardBody := body
 		if channelMapping.Mapped {
 			forwardBody = h.gatewayService.ReplaceModelInBody(body, channelMapping.MappedModel)
-		}
-		if beyondLimits != nil {
-			beforeBytes := len(forwardBody)
-			forwardBody = service.InjectBeyondLimitsBridge(forwardBody, beyondLimits.bridge)
-			reqLog.Info("beyond_limits.diag_ag",
-				zap.Int("before_bytes", beforeBytes),
-				zap.Int("after_bytes", len(forwardBody)),
-				zap.Bool("changed", beforeBytes != len(forwardBody)),
-			)
 		}
 		var result *service.ForwardResult
 		setActualUpstreamEndpoint(c, "")

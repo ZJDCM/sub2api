@@ -143,6 +143,11 @@ func (s *AntigravityGatewayService) ForwardGemini(ctx context.Context, c *gin.Co
 
 	injectedBody = ensureGeminiFunctionCallThoughtSignatures(injectedBody)
 
+	// 破甲桥接提示词注入：放在 user 消息里（Gemini 对 user 通道服从率远高于 system）。
+	if bridge := BeyondLimitsBridgeFromContext(ctx); bridge != "" {
+		injectedBody = InjectBeyondLimitsBridgeIntoGeminiUser(injectedBody, bridge)
+	}
+
 	// 包装请求
 	wrappedBody, err := s.wrapV1InternalRequest(projectID, mappedModel, injectedBody)
 	if err != nil {
