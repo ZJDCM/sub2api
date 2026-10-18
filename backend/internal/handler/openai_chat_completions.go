@@ -122,7 +122,17 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 	var beyondLimits *beyondLimitsRequest
 	if apiKey.Group != nil {
 		beyondLimits = resolveBeyondLimits(apiKey.Group, reqModel, body)
+		reqLog.Info("beyond_limits.diag",
+			zap.Int64("group_id", apiKey.Group.ID),
+			zap.String("req_model", reqModel),
+			zap.String("platform", string(service.DetectBeyondLimitsPlatform(reqModel))),
+			zap.Bool("openai_enabled", apiKey.Group.BeyondLimitsEnabled),
+			zap.Bool("deepseek_enabled", apiKey.Group.BeyondLimitsDeepseekEnabled),
+			zap.Bool("gemini_enabled", apiKey.Group.BeyondLimitsGeminiEnabled),
+			zap.Bool("resolved", beyondLimits != nil),
+		)
 		if beyondLimits != nil {
+			reqLog.Info("beyond_limits.diag_inject", zap.Int("bridge_len", len(beyondLimits.bridge)))
 			defer beyondLimits.record()
 		}
 	}
@@ -263,7 +273,13 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 			forwardBody = h.gatewayService.ReplaceModelInBody(body, channelMapping.MappedModel)
 		}
 		if beyondLimits != nil {
+			beforeLen := len(forwardBody)
 			forwardBody = service.InjectBeyondLimitsBridge(forwardBody, beyondLimits.bridge)
+			reqLog.Info("beyond_limits.diag_forward",
+				zap.Int("before_bytes", beforeLen),
+				zap.Int("after_bytes", len(forwardBody)),
+				zap.Bool("changed", beforeLen != len(forwardBody)),
+			)
 		}
 		writerSizeBeforeForward := c.Writer.Size()
 		beyondLimitsPrevWriter := c.Writer
