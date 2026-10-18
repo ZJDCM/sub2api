@@ -234,6 +234,25 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 		return
 	}
 
+	// 破甲管道：Antigravity 分组按 Gemini 配置注入 bridge。Anthropic 的 messages
+	// 数组不接受 system 角色，桥接提示词写入顶层 system 字段，后续转换会带到上游。
+	if apiKey.Group != nil && apiKey.Group.Platform == service.PlatformAntigravity {
+		if beyondLimits := resolveBeyondLimits(apiKey.Group, reqModel, body); beyondLimits != nil {
+			defer beyondLimits.record()
+			injected := service.InjectBeyondLimitsBridgeAnthropic(body, beyondLimits.bridge)
+			if err := parsedReq.ReplaceBody(injected); err != nil {
+				reqLog.Warn("gateway.beyond_limits_inject_failed", zap.Error(err))
+			} else {
+				reqLog.Info("beyond_limits.diag_ag",
+					zap.Int("before_bytes", len(body)),
+					zap.Int("after_bytes", len(injected)),
+					zap.Bool("changed", len(body) != len(injected)),
+				)
+				body = parsedReq.Body.Bytes()
+			}
+		}
+	}
+
 	// Track if we've started streaming (for error handling)
 	streamStarted := false
 

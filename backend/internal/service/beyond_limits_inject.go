@@ -75,6 +75,44 @@ func InjectBeyondLimitsBridgeGemini(body []byte, bridge string) []byte {
 	return out
 }
 
+// InjectBeyondLimitsBridgeAnthropic 把 bridge 写入 Anthropic Messages 请求的顶层
+// system 字段（字符串形态），并移除 messages 里出现的 system/developer 角色
+// （Anthropic 的 messages 不接受 system 角色，放进会被上游判为非法请求）。
+// 解析失败或重新序列化失败时原样返回 body，不中断请求。
+func InjectBeyondLimitsBridgeAnthropic(body []byte, bridge string) []byte {
+	if strings.TrimSpace(bridge) == "" {
+		return body
+	}
+	dec := json.NewDecoder(bytes.NewReader(body))
+	dec.UseNumber()
+	var v any
+	if err := dec.Decode(&v); err != nil {
+		return body
+	}
+	obj, ok := v.(map[string]any)
+	if !ok {
+		return body
+	}
+	obj["system"] = bridge
+	if messages, ok := obj["messages"].([]any); ok {
+		filtered := make([]any, 0, len(messages))
+		for _, m := range messages {
+			if mo, ok := m.(map[string]any); ok {
+				if role, _ := mo["role"].(string); role == "system" || role == "developer" {
+					continue
+				}
+			}
+			filtered = append(filtered, m)
+		}
+		obj["messages"] = filtered
+	}
+	out, err := json.Marshal(v)
+	if err != nil {
+		return body
+	}
+	return out
+}
+
 // InjectBeyondLimitsBridgeUser 与 InjectBeyondLimitsBridge 相同，但把 bridge 作为
 // user 消息注入。用于忽略 system 的 OpenAI 兼容上游（如 WorkBuddy 网关）：
 // 这类上游只认 user 消息里的指令，注入 system 会被直接丢弃。

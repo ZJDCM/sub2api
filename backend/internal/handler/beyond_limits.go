@@ -28,6 +28,12 @@ func resolveBeyondLimits(group *service.Group, model string, body []byte) *beyon
 		return nil
 	}
 	platform := service.DetectBeyondLimitsPlatform(model)
+	// Antigravity 分组统一走 Gemini 破甲：该平台既承载 gemini-* 也承载 claude-*，
+	// 按模型前缀判定会把 claude-* 误判成 openai 并套用响应篡改。这里以分组平台
+	// 为准，固定使用 Gemini 配置与 gemini 分组开关。
+	if group.Platform == service.PlatformAntigravity {
+		platform = service.BeyondLimitsPlatformGemini
+	}
 	enabled := false
 	switch platform {
 	case service.BeyondLimitsPlatformDeepSeek:
