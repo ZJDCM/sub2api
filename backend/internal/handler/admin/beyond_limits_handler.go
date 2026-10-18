@@ -16,13 +16,14 @@ import (
 //   - 分组级开关（勾选分组 → 对应平台的 beyond_limits_*_enabled）
 //   - 监控统计与交互日志
 type BeyondLimitsHandler struct {
-	client      *ent.Client
-	settingRepo service.SettingRepository
+	client               *ent.Client
+	settingRepo          service.SettingRepository
+	authCacheInvalidator service.APIKeyAuthCacheInvalidator
 }
 
 // NewBeyondLimitsHandler 构造破甲管道后台 handler。
-func NewBeyondLimitsHandler(client *ent.Client, settingRepo service.SettingRepository) *BeyondLimitsHandler {
-	return &BeyondLimitsHandler{client: client, settingRepo: settingRepo}
+func NewBeyondLimitsHandler(client *ent.Client, settingRepo service.SettingRepository, authCacheInvalidator service.APIKeyAuthCacheInvalidator) *BeyondLimitsHandler {
+	return &BeyondLimitsHandler{client: client, settingRepo: settingRepo, authCacheInvalidator: authCacheInvalidator}
 }
 
 // parseBeyondLimitsPlatform 从 URL :platform 参数解析平台；未知值回退 openai。
@@ -113,6 +114,11 @@ func (h *BeyondLimitsHandler) ToggleGroup(c *gin.Context) {
 	if _, err := upd.Save(c.Request.Context()); err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to update group: "+err.Error())
 		return
+	}
+	// 认证快照同时缓存在 L1（15s）与 L2 Redis（300s），分组开关变更后必须主动失效，
+	// 否则后台勾选后最长 5 分钟才生效，表现为“开了没反应”。
+	if h.authCacheInvalidator != nil {
+		h.authCacheInvalidator.InvalidateAuthCacheByGroupID(c.Request.Context(), id)
 	}
 	response.Success(c, gin.H{"id": id, "platform": string(platform), field: req.Enabled})
 }
