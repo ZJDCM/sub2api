@@ -230,6 +230,10 @@ func (r *apiKeyRepository) GetByKeyForAuth(ctx context.Context, key string) (*se
 				group.FieldProfitControlEnabled,
 				group.FieldProfitMinMargin,
 				group.FieldProfitSafetyBuffer,
+				// 破甲管道：认证快照漏选会让 deepseek/gemini/openai 开关静默失效。
+				group.FieldBeyondLimitsEnabled,
+				group.FieldBeyondLimitsDeepseekEnabled,
+				group.FieldBeyondLimitsGeminiEnabled,
 			)
 		}).
 		Only(ctx)

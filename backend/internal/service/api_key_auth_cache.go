@@ -140,6 +140,12 @@ type APIKeyAuthGroupSnapshot struct {
 	ProfitControlEnabled bool    `json:"profit_control_enabled"`
 	ProfitMinMargin      float64 `json:"profit_min_margin"`
 	ProfitSafetyBuffer   float64 `json:"profit_safety_buffer"`
+
+	// 破甲管道开关：resolveBeyondLimits 在直连热路径读认证分组快照，
+	// 漏缓存会让 deepseek/gemini/openai 破甲门静默失效。
+	BeyondLimitsEnabled         bool `json:"beyond_limits_enabled"`
+	BeyondLimitsDeepseekEnabled bool `json:"beyond_limits_deepseek_enabled"`
+	BeyondLimitsGeminiEnabled   bool `json:"beyond_limits_gemini_enabled"`
 }
 
 // APIKeyAuthCacheEntry 缓存条目，支持负缓存

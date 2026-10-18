@@ -14,7 +14,7 @@ import (
 	"github.com/dgraph-io/ristretto"
 )
 
-const apiKeyAuthSnapshotVersion = 24 // v24: group model_allowlist field (renamed from models_list_config, enforcing semantics)
+const apiKeyAuthSnapshotVersion = 25 // v25: group beyond_limits_enabled/deepseek/gemini fields added to auth snapshot
 
 type apiKeyAuthCacheConfig struct {
 	l1Size        int
@@ -435,6 +435,9 @@ func (s *APIKeyService) snapshotFromAPIKey(ctx context.Context, apiKey *APIKey) 
 			ProfitControlEnabled:            apiKey.Group.ProfitControlEnabled,
 			ProfitMinMargin:                 apiKey.Group.ProfitMinMargin,
 			ProfitSafetyBuffer:              apiKey.Group.ProfitSafetyBuffer,
+			BeyondLimitsEnabled:             apiKey.Group.BeyondLimitsEnabled,
+			BeyondLimitsDeepseekEnabled:     apiKey.Group.BeyondLimitsDeepseekEnabled,
+			BeyondLimitsGeminiEnabled:       apiKey.Group.BeyondLimitsGeminiEnabled,
 		}
 	}
 	return snapshot
@@ -537,6 +540,9 @@ func (s *APIKeyService) snapshotToAPIKey(key string, snapshot *APIKeyAuthSnapsho
 			ProfitControlEnabled:            snapshot.Group.ProfitControlEnabled,
 			ProfitMinMargin:                 snapshot.Group.ProfitMinMargin,
 			ProfitSafetyBuffer:              snapshot.Group.ProfitSafetyBuffer,
+			BeyondLimitsEnabled:             snapshot.Group.BeyondLimitsEnabled,
+			BeyondLimitsDeepseekEnabled:     snapshot.Group.BeyondLimitsDeepseekEnabled,
+			BeyondLimitsGeminiEnabled:       snapshot.Group.BeyondLimitsGeminiEnabled,
 		}
 	}
 	s.compileAPIKeyIPRules(apiKey)
