@@ -1428,25 +1428,25 @@ type upstreamModelCapabilityEntry struct {
 	SupportedReasoningLevels []json.RawMessage `json:"supported_reasoning_levels"`
 	// ReasoningOptions 兼容两种形态：标准 [{type,values}] 与自定义网关的 ["low","high"]。
 	// 用 RawMessage 承接，避免字符串数组导致整条记录 unmarshal 失败被丢弃。
-	ReasoningOptions     json.RawMessage    `json:"reasoning_options"`
-	InputModalities      []string           `json:"input_modalities"`
-	Modalities           modelsDevModalities `json:"modalities"`
-	ContextWindow        int64              `json:"context_window"`
-	MaxContextWindow     int64              `json:"max_context_window"`
+	ReasoningOptions json.RawMessage     `json:"reasoning_options"`
+	InputModalities  []string            `json:"input_modalities"`
+	Modalities       modelsDevModalities `json:"modalities"`
+	ContextWindow    int64               `json:"context_window"`
+	MaxContextWindow int64               `json:"max_context_window"`
 	// 以下为自定义 OpenAI 兼容网关（如 WorkBuddy）使用的字段别名。
-	ContextLength        int64  `json:"context_length"`
-	CatalogContextLength int64  `json:"catalog_context_length"`
-	DefaultContextLength int64  `json:"default_context_length"`
-	ReasoningDefault     string `json:"reasoning_default"`
-	ReasoningEffortLabel string `json:"reasoning_effort"`
-	MaxOutputTokens      int64  `json:"max_output_tokens"`
+	ContextLength        int64          `json:"context_length"`
+	CatalogContextLength int64          `json:"catalog_context_length"`
+	DefaultContextLength int64          `json:"default_context_length"`
+	ReasoningDefault     string         `json:"reasoning_default"`
+	ReasoningEffortLabel string         `json:"reasoning_effort"`
+	MaxOutputTokens      int64          `json:"max_output_tokens"`
 	Limit                modelsDevLimit `json:"limit"`
-	DisplayNameCamel     string  `json:"displayName"`
-	SupportsImages       *bool   `json:"supportsImages"`
-	SupportsThinking     *bool   `json:"supportsThinking"`
-	ThinkingBudget       *int64  `json:"thinkingBudget"`
-	MaxTokens            int64   `json:"maxTokens"`
-	MaxOutputTokensCamel int64   `json:"maxOutputTokens"`
+	DisplayNameCamel     string         `json:"displayName"`
+	SupportsImages       *bool          `json:"supportsImages"`
+	SupportsThinking     *bool          `json:"supportsThinking"`
+	ThinkingBudget       *int64         `json:"thinkingBudget"`
+	MaxTokens            int64          `json:"maxTokens"`
+	MaxOutputTokensCamel int64          `json:"maxOutputTokens"`
 }
 
 func extractUpstreamModelIDs(body []byte) ([]string, error) {

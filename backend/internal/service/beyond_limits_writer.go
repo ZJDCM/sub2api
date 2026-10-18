@@ -35,8 +35,8 @@ type BeyondLimitsCapture interface {
 // 非流式（application/json）：缓冲完整 JSON，命中则改写 content 字段后一次写出。
 type beyondLimitsWriter struct {
 	gin.ResponseWriter
-	engine *BeyondLimitsTamperEngine
-	schema BeyondLimitsResponseSchema
+	engine   *BeyondLimitsTamperEngine
+	schema   BeyondLimitsResponseSchema
 	isStream bool
 
 	mu         sync.Mutex
@@ -172,7 +172,7 @@ func (w *beyondLimitsWriter) handleSSELine(line []byte) {
 				// Gemini 流式每帧携带完整累积正文（非增量 delta），直接替换而非累加。
 				w.contentAcc.Reset()
 			}
-			w.contentAcc.WriteString(content)
+			_, _ = w.contentAcc.WriteString(content)
 		}
 		if replacement, matched := w.engine.Intercept("", w.contentAcc.String()); matched {
 			w.tampered = true
@@ -236,7 +236,7 @@ func extractSSEContent(data []byte, schema BeyondLimitsResponseSchema) string {
 	if schema == BeyondLimitsSchemaGemini {
 		var sb strings.Builder
 		for _, r := range gjson.GetBytes(data, "candidates.#.content.parts.#.text").Array() {
-			sb.WriteString(r.String())
+			_, _ = sb.WriteString(r.String())
 		}
 		return sb.String()
 	}
@@ -260,7 +260,7 @@ func extractNonStreamReply(body []byte) string {
 	}
 	var sb strings.Builder
 	for _, r := range gjson.GetBytes(body, "output.#.content.#.text").Array() {
-		sb.WriteString(r.String())
+		_, _ = sb.WriteString(r.String())
 	}
 	return sb.String()
 }
