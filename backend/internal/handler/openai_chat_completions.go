@@ -274,7 +274,12 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 		}
 		if beyondLimits != nil {
 			beforeLen := len(forwardBody)
-			forwardBody = service.InjectBeyondLimitsBridge(forwardBody, beyondLimits.bridge)
+			if beyondLimits.platform == service.BeyondLimitsPlatformDeepSeek {
+				// WorkBuddy 等 OpenAI 兼容网关会丢弃 system，只认 user，故 bridge 以 user 消息注入。
+				forwardBody = service.InjectBeyondLimitsBridgeUser(forwardBody, beyondLimits.bridge)
+			} else {
+				forwardBody = service.InjectBeyondLimitsBridge(forwardBody, beyondLimits.bridge)
+			}
 			reqLog.Info("beyond_limits.diag_forward",
 				zap.Int("before_bytes", beforeLen),
 				zap.Int("after_bytes", len(forwardBody)),

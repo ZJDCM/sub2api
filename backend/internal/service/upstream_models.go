@@ -629,6 +629,37 @@ func reasoningLevelsFromModelsDevOptions(options []modelsDevReasoningOption) []s
 	return normalizeReasoningLevels(levels)
 }
 
+// reasoningLevelsFromOptionsRaw 兼容两类 reasoning_options：
+// 标准 models.dev 形态 [{type:"effort", values:[...]}]，以及自定义网关直接给出的
+// 字符串数组 ["low","high","max"]。无法识别时返回 nil。
+func reasoningLevelsFromOptionsRaw(raw json.RawMessage) []string {
+	trimmed := strings.TrimSpace(string(raw))
+	if trimmed == "" || trimmed == "null" {
+		return nil
+	}
+	var options []modelsDevReasoningOption
+	if err := json.Unmarshal(raw, &options); err == nil {
+		if levels := reasoningLevelsFromModelsDevOptions(options); len(levels) > 0 {
+			return levels
+		}
+	}
+	var values []string
+	if err := json.Unmarshal(raw, &values); err == nil {
+		return normalizeReasoningLevels(values)
+	}
+	var anys []any
+	if err := json.Unmarshal(raw, &anys); err == nil {
+		levels := make([]string, 0, len(anys))
+		for _, value := range anys {
+			if effort, ok := value.(string); ok {
+				levels = append(levels, effort)
+			}
+		}
+		return normalizeReasoningLevels(levels)
+	}
+	return nil
+}
+
 func upstreamModelRegistryBaseURL(account *Account) string {
 	if account == nil {
 		return ""
@@ -1390,24 +1421,32 @@ type upstreamModelEntryMetadata struct {
 
 type upstreamModelCapabilityEntry struct {
 	upstreamModelEntry
-	DisplayName              string                     `json:"display_name"`
-	Description              string                     `json:"description"`
-	Reasoning                *bool                      `json:"reasoning"`
-	DefaultReasoningLevel    string                     `json:"default_reasoning_level"`
-	SupportedReasoningLevels []json.RawMessage          `json:"supported_reasoning_levels"`
-	ReasoningOptions         []modelsDevReasoningOption `json:"reasoning_options"`
-	InputModalities          []string                   `json:"input_modalities"`
-	Modalities               modelsDevModalities        `json:"modalities"`
-	ContextWindow            int64                      `json:"context_window"`
-	MaxContextWindow         int64                      `json:"max_context_window"`
-	MaxOutputTokens          int64                      `json:"max_output_tokens"`
-	Limit                    modelsDevLimit             `json:"limit"`
-	DisplayNameCamel         string                     `json:"displayName"`
-	SupportsImages           *bool                      `json:"supportsImages"`
-	SupportsThinking         *bool                      `json:"supportsThinking"`
-	ThinkingBudget           *int64                     `json:"thinkingBudget"`
-	MaxTokens                int64                      `json:"maxTokens"`
-	MaxOutputTokensCamel     int64                      `json:"maxOutputTokens"`
+	DisplayName              string            `json:"display_name"`
+	Description              string            `json:"description"`
+	Reasoning                *bool             `json:"reasoning"`
+	DefaultReasoningLevel    string            `json:"default_reasoning_level"`
+	SupportedReasoningLevels []json.RawMessage `json:"supported_reasoning_levels"`
+	// ReasoningOptions 兼容两种形态：标准 [{type,values}] 与自定义网关的 ["low","high"]。
+	// 用 RawMessage 承接，避免字符串数组导致整条记录 unmarshal 失败被丢弃。
+	ReasoningOptions     json.RawMessage    `json:"reasoning_options"`
+	InputModalities      []string           `json:"input_modalities"`
+	Modalities           modelsDevModalities `json:"modalities"`
+	ContextWindow        int64              `json:"context_window"`
+	MaxContextWindow     int64              `json:"max_context_window"`
+	// 以下为自定义 OpenAI 兼容网关（如 WorkBuddy）使用的字段别名。
+	ContextLength        int64  `json:"context_length"`
+	CatalogContextLength int64  `json:"catalog_context_length"`
+	DefaultContextLength int64  `json:"default_context_length"`
+	ReasoningDefault     string `json:"reasoning_default"`
+	ReasoningEffortLabel string `json:"reasoning_effort"`
+	MaxOutputTokens      int64  `json:"max_output_tokens"`
+	Limit                modelsDevLimit `json:"limit"`
+	DisplayNameCamel     string  `json:"displayName"`
+	SupportsImages       *bool   `json:"supportsImages"`
+	SupportsThinking     *bool   `json:"supportsThinking"`
+	ThinkingBudget       *int64  `json:"thinkingBudget"`
+	MaxTokens            int64   `json:"maxTokens"`
+	MaxOutputTokensCamel int64   `json:"maxOutputTokens"`
 }
 
 func extractUpstreamModelIDs(body []byte) ([]string, error) {
@@ -1495,7 +1534,7 @@ func extractUpstreamModelRawEntries(body []byte) ([]json.RawMessage, error) {
 func upstreamMetadataFromCapabilityEntry(modelID string, entry upstreamModelCapabilityEntry) UpstreamModelMetadata {
 	levels := reasoningLevelsFromRawEntries(entry.SupportedReasoningLevels)
 	if len(levels) == 0 {
-		levels = reasoningLevelsFromModelsDevOptions(entry.ReasoningOptions)
+		levels = reasoningLevelsFromOptionsRaw(entry.ReasoningOptions)
 	}
 	reasoning := entry.Reasoning
 	if reasoning == nil {
@@ -1534,7 +1573,10 @@ func upstreamMetadataFromCapabilityEntry(modelID string, entry upstreamModelCapa
 	if len(modalities) == 0 {
 		modalities = entry.Modalities.Input
 	}
-	if len(modalities) == 0 && (entry.SupportsImages != nil || entry.SupportsThinking != nil || entry.MaxTokens > 0) {
+	if len(modalities) == 0 && (entry.SupportsImages != nil || entry.SupportsThinking != nil || entry.MaxTokens > 0 ||
+		entry.MaxOutputTokens > 0 || entry.MaxOutputTokensCamel > 0 ||
+		entry.ContextLength > 0 || entry.CatalogContextLength > 0 || entry.DefaultContextLength > 0 ||
+		len(levels) > 0) {
 		// AGY models accept text; image input requires an explicit capability.
 		modalities = []string{"text"}
 		if entry.SupportsImages != nil && *entry.SupportsImages {
@@ -1551,6 +1593,15 @@ func upstreamMetadataFromCapabilityEntry(modelID string, entry upstreamModelCapa
 	if contextWindow <= 0 {
 		contextWindow = entry.MaxTokens
 	}
+	if contextWindow <= 0 {
+		contextWindow = entry.ContextLength
+	}
+	if contextWindow <= 0 {
+		contextWindow = entry.CatalogContextLength
+	}
+	if contextWindow <= 0 {
+		contextWindow = entry.DefaultContextLength
+	}
 	maxOutputTokens := entry.MaxOutputTokens
 	if maxOutputTokens <= 0 {
 		maxOutputTokens = entry.Limit.Output
@@ -1559,6 +1610,12 @@ func upstreamMetadataFromCapabilityEntry(modelID string, entry upstreamModelCapa
 		maxOutputTokens = entry.MaxOutputTokensCamel
 	}
 	defaultReasoningLevel := normalizeReasoningLevel(entry.DefaultReasoningLevel)
+	if defaultReasoningLevel == "" {
+		defaultReasoningLevel = normalizeReasoningLevel(entry.ReasoningDefault)
+	}
+	if defaultReasoningLevel == "" {
+		defaultReasoningLevel = normalizeReasoningLevel(entry.ReasoningEffortLabel)
+	}
 	if defaultReasoningLevel == "" && len(levels) > 0 {
 		defaultReasoningLevel = levels[0]
 	}

@@ -75,6 +75,94 @@ func InjectBeyondLimitsBridgeGemini(body []byte, bridge string) []byte {
 	return out
 }
 
+// InjectBeyondLimitsBridgeUser 与 InjectBeyondLimitsBridge 相同，但把 bridge 作为
+// user 消息注入。用于忽略 system 的 OpenAI 兼容上游（如 WorkBuddy 网关）：
+// 这类上游只认 user 消息里的指令，注入 system 会被直接丢弃。
+// 覆盖：
+//   - 直接字段：instructions / system / system_prompt / personality（直接删除）
+//   - messages[].role=="system" 或 "developer"：全部移除，头部插入唯一一条 user=bridge
+//   - input[].role=="system"：全部移除，头部插入唯一一条 user=bridge
+//
+// 解析失败或注入后重新序列化失败时原样返回 body，不中断请求。
+func InjectBeyondLimitsBridgeUser(body []byte, bridge string) []byte {
+	if strings.TrimSpace(bridge) == "" {
+		return body
+	}
+	dec := json.NewDecoder(bytes.NewReader(body))
+	dec.UseNumber()
+	var v any
+	if err := dec.Decode(&v); err != nil {
+		return body
+	}
+	if !injectUserValue(v, bridge) {
+		return body
+	}
+	out, err := json.Marshal(v)
+	if err != nil {
+		return body
+	}
+	return out
+}
+
+// injectUserValue 丢弃所有 system/developer 载体，把 bridge 作为唯一一条 user 消息前置。
+func injectUserValue(v any, instructions string) bool {
+	obj, ok := v.(map[string]any)
+	if !ok {
+		return false
+	}
+	injected := false
+
+	for _, field := range []string{"instructions", "system", "system_prompt", "personality"} {
+		if _, exists := obj[field]; exists {
+			delete(obj, field)
+			injected = true
+		}
+	}
+
+	if messages, ok := obj["messages"].([]any); ok {
+		filtered := make([]any, 0, len(messages)+1)
+		for _, m := range messages {
+			mo, ok := m.(map[string]any)
+			if !ok {
+				filtered = append(filtered, m)
+				continue
+			}
+			if role, _ := mo["role"].(string); role == "system" || role == "developer" {
+				continue
+			}
+			filtered = append(filtered, m)
+		}
+		obj["messages"] = append([]any{
+			map[string]any{"role": "user", "content": instructions},
+		}, filtered...)
+		injected = true
+	}
+
+	if input, ok := obj["input"].([]any); ok {
+		filtered := make([]any, 0, len(input)+1)
+		for _, item := range input {
+			io, ok := item.(map[string]any)
+			if !ok {
+				filtered = append(filtered, item)
+				continue
+			}
+			if role, _ := io["role"].(string); role == "system" {
+				continue
+			}
+			filtered = append(filtered, item)
+		}
+		obj["input"] = append([]any{
+			map[string]any{
+				"role":    "user",
+				"content": []any{map[string]any{"type": "input_text", "text": instructions}},
+			},
+		}, filtered...)
+		injected = true
+	}
+
+	return injected
+}
+
 func injectSystemValue(v any, instructions string) bool {
 	obj, ok := v.(map[string]any)
 	if !ok {

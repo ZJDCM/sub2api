@@ -289,7 +289,11 @@ func (h *GatewayHandler) Responses(c *gin.Context) {
 			forwardBody = h.gatewayService.ReplaceModelInBody(body, channelMapping.MappedModel)
 		}
 		if beyondLimits != nil {
-			forwardBody = service.InjectBeyondLimitsBridge(forwardBody, beyondLimits.bridge)
+			if beyondLimits.platform == service.BeyondLimitsPlatformDeepSeek {
+				forwardBody = service.InjectBeyondLimitsBridgeUser(forwardBody, beyondLimits.bridge)
+			} else {
+				forwardBody = service.InjectBeyondLimitsBridge(forwardBody, beyondLimits.bridge)
+			}
 		}
 		var result *service.ForwardResult
 		setActualUpstreamEndpoint(c, "")
