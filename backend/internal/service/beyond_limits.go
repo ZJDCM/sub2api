@@ -118,16 +118,26 @@ const (
 )
 
 // DetectBeyondLimitsPlatform 根据模型名判定破甲管道应归属的平台。
+// 兼容带供应商前缀/命名空间的模型名（如 cn:deepseek-v4.1-flash、google/gemini-3-pro），
+// 先剥离最后一个 ':' 或 '/' 之前的部分再做前缀匹配，兜底用包含匹配。
 func DetectBeyondLimitsPlatform(model string) BeyondLimitsPlatform {
 	m := strings.ToLower(strings.TrimSpace(model))
+	if i := strings.LastIndexAny(m, ":/"); i >= 0 && i+1 < len(m) {
+		m = m[i+1:]
+	}
 	switch {
 	case strings.HasPrefix(m, "deepseek"):
 		return BeyondLimitsPlatformDeepSeek
 	case strings.HasPrefix(m, "gemini"):
 		return BeyondLimitsPlatformGemini
-	default:
-		return BeyondLimitsPlatformOpenAI
 	}
+	if strings.Contains(m, "deepseek") {
+		return BeyondLimitsPlatformDeepSeek
+	}
+	if strings.Contains(m, "gemini") {
+		return BeyondLimitsPlatformGemini
+	}
+	return BeyondLimitsPlatformOpenAI
 }
 
 // BeyondLimitsSettingKeyForPlatform 返回平台对应的 settings 键；openai 沿用旧键以兼容已上线数据。
