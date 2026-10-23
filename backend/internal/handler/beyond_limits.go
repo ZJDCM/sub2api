@@ -1,11 +1,17 @@
 package handler
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/service"
 	"github.com/gin-gonic/gin"
 )
+
+// beyondLimitsHeader 把本次请求的破甲结论直接写在响应头上，取值形如
+// "deepseek/21413"（平台/注入的 bridge 字节数）；"off" 表示该请求没走破甲。
+// 客户端与运维不必再翻日志确认注入是否生效。
+const beyondLimitsHeader = "X-Beyond-Limits"
 
 // beyondLimitsRequest 是单个请求的破甲管道运行时上下文，封装平台判定、开关读取、
 // 响应篡改包装与交互记录，供 chat completions / responses / gemini 三条入站路径复用。
@@ -62,6 +68,22 @@ func resolveBeyondLimits(group *service.Group, model string, body []byte) *beyon
 		start:    time.Now(),
 		tamper:   platform == service.BeyondLimitsPlatformOpenAI,
 	}
+}
+
+// tag 在响应头写回命中结论，供客户端自证。
+func (b *beyondLimitsRequest) tag(c *gin.Context) {
+	if b == nil || c == nil {
+		return
+	}
+	c.Header(beyondLimitsHeader, string(b.platform)+"/"+strconv.Itoa(len(b.bridge)))
+}
+
+// markBeyondLimitsOff 在未启用/未命中时显式标记 off，避免"没注入"与"没这个头"混淆。
+func markBeyondLimitsOff(c *gin.Context) {
+	if c == nil {
+		return
+	}
+	c.Header(beyondLimitsHeader, "off")
 }
 
 // wrapWriter 包装响应 writer 做拒绝篡改，并捕获篡改结果供 record 使用。

@@ -124,9 +124,12 @@ func (h *GatewayHandler) ChatCompletions(c *gin.Context) {
 	// 同时清掉请求自带的 system/developer 指令，只保留上游身份补丁。
 	if apiKey.Group != nil && apiKey.Group.Platform == service.PlatformAntigravity {
 		if beyondLimits := resolveBeyondLimits(apiKey.Group, reqModel, body); beyondLimits != nil {
+			beyondLimits.tag(c)
 			defer beyondLimits.record()
 			c.Request = c.Request.WithContext(service.WithBeyondLimitsBridge(c.Request.Context(), beyondLimits.bridge))
 			body = service.StripRequestSystemPrompts(body)
+		} else {
+			markBeyondLimitsOff(c)
 		}
 	}
 

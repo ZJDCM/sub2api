@@ -375,6 +375,7 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 	if apiKey.Group != nil {
 		beyondLimits = resolveBeyondLimits(apiKey.Group, reqModel, body)
 		if beyondLimits != nil {
+			beyondLimits.tag(c)
 			defer beyondLimits.record()
 			// Antigravity 分组：bridge 交给转发层注入最终 Gemini 请求的 user 消息，
 			// 这里清掉请求自带的 systemInstruction，避免与身份补丁抢占优先级。
@@ -382,6 +383,8 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 				c.Request = c.Request.WithContext(service.WithBeyondLimitsBridge(c.Request.Context(), beyondLimits.bridge))
 				body = service.StripGeminiSystemInstruction(body)
 			}
+		} else {
+			markBeyondLimitsOff(c)
 		}
 	}
 

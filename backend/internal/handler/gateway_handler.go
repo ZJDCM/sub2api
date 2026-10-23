@@ -238,6 +238,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 	// 最终 Gemini 请求的 user 消息，请求自带的 system 指令在这里清掉。
 	if apiKey.Group != nil && apiKey.Group.Platform == service.PlatformAntigravity {
 		if beyondLimits := resolveBeyondLimits(apiKey.Group, reqModel, body); beyondLimits != nil {
+			beyondLimits.tag(c)
 			defer beyondLimits.record()
 			c.Request = c.Request.WithContext(service.WithBeyondLimitsBridge(c.Request.Context(), beyondLimits.bridge))
 			stripped := service.StripRequestSystemPrompts(body)
@@ -246,6 +247,8 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 			} else {
 				body = parsedReq.Body.Bytes()
 			}
+		} else {
+			markBeyondLimitsOff(c)
 		}
 	}
 

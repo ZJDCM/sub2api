@@ -2479,14 +2479,36 @@ func (r *accountRepository) SetOverloaded(ctx context.Context, id int64, until t
 }
 
 func (r *accountRepository) SetTempUnschedulable(ctx context.Context, id int64, until time.Time, reason string) error {
+	// 单账号池不进冷却：同一个分组里同平台只有这一个可用账号时，写入冷却等于让整组
+	// 在这段时间内必然失败（客户看到的就是"中转挂了"）。此处只在存在同组同平台的其它
+	// 可用账号时才真正写冷却；单账号池由上游持续快速失败代替冷却，行为与 ZakoAI Proxy
+	// 的 release_cooldowns_if_pool_blocked 一致。RateLimitResetAt/OverloadUntil 走各自
+	// 的写入路径，不受这里影响。
 	result, err := r.sql.ExecContext(ctx, `
-		UPDATE accounts
+		UPDATE accounts AS a
 		SET temp_unschedulable_until = $1,
 			temp_unschedulable_reason = $2,
 			updated_at = NOW()
-		WHERE id = $3
-			AND deleted_at IS NULL
-			AND (temp_unschedulable_until IS NULL OR temp_unschedulable_until < $1)
+		WHERE a.id = $3
+			AND a.deleted_at IS NULL
+			AND (a.temp_unschedulable_until IS NULL OR a.temp_unschedulable_until < $1)
+			AND (
+				-- 无分组账号沿用旧行为（未分组池的候选集合不在这里判定）
+				NOT EXISTS (SELECT 1 FROM account_groups AS self_link WHERE self_link.account_id = a.id)
+				-- 有分组时：仅当同组同平台存在其它可用账号才写冷却
+				OR EXISTS (
+					SELECT 1
+					FROM account_groups AS self_link
+					JOIN account_groups AS peer_link ON peer_link.group_id = self_link.group_id
+					JOIN accounts AS peer ON peer.id = peer_link.account_id
+					WHERE self_link.account_id = a.id
+						AND peer.id <> a.id
+						AND peer.deleted_at IS NULL
+						AND peer.status = 'active'
+						AND peer.schedulable IS TRUE
+						AND peer.platform = a.platform
+				)
+			)
 	`, until, reason, id)
 	if err != nil {
 		return err

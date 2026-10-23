@@ -132,8 +132,11 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 			zap.Bool("resolved", beyondLimits != nil),
 		)
 		if beyondLimits != nil {
+			beyondLimits.tag(c)
 			reqLog.Info("beyond_limits.diag_inject", zap.Int("bridge_len", len(beyondLimits.bridge)))
 			defer beyondLimits.record()
+		} else {
+			markBeyondLimitsOff(c)
 		}
 	}
 
